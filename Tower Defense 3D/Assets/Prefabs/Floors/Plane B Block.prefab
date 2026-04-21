@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2252312356097963931}
   - component: {fileID: 4534318197110861952}
   - component: {fileID: 5521626316634384897}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Plane B Block
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e10f2bc2507384759ae951b323b850ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tile
-  isWalkableA: 1
-  isWalkableB: 0
+  isWalkableA: 0
+  isWalkableB: 1
   isBuildable: 0
   isEnemyPath: 0

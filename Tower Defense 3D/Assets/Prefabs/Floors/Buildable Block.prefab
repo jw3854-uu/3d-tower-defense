@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5215481445984484606}
   - component: {fileID: 3749424491863793864}
   - component: {fileID: 429126384515657760}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Buildable Block
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e10f2bc2507384759ae951b323b850ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tile
-  isWalkableA: 1
+  isWalkableA: 0
   isWalkableB: 0
-  isBuildable: 0
+  isBuildable: 1
   isEnemyPath: 0
+  isOccupied: 0

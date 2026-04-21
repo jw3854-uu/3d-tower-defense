@@ -1,69 +1,103 @@
+using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.InputSystem;
 
-// Attach to any GameObject. Assign Grid, a prefab, and optionally a second cell to measure distance from.
 public class GridPlacementTest : MonoBehaviour
 {
-    [Header("References")]
-    public Grid grid;
-    public GameObject placementPrefab;
 
-    [Header("Distance Debug")]
-    [Tooltip("Measure grid distance from this cell (set via inspector or right-click context)")]
+    public Grid grid;
+    // TODO: Change to the toy model prefab once we have it
+    public GameObject placementPrefab;
     public Vector3Int referenceCell;
+    public LayerMask floorLayerMask;
+
+    [Header("Preview Materials")]
+    public Material validPreviewMaterial;
+    public Material invalidPreviewMaterial;
+
+    public event Action OnPlaced;
 
     Camera _cam;
     GameObject _preview;
+    Renderer[] _previewRenderers;
     Vector3Int _hoveredCell;
     bool _hasHovered;
+    bool _active;
 
     void Start()
     {
         _cam = Camera.main;
-
         if (placementPrefab != null)
         {
             _preview = Instantiate(placementPrefab);
+            _previewRenderers = _preview.GetComponentsInChildren<Renderer>();
             SetPreviewVisible(false);
+            _active = false; // Start with placement disabled until Player B initiates it
         }
+    }
+
+    void SetPreviewMaterial(Material mat)
+    {
+        if (mat == null) return;
+        foreach (var r in _previewRenderers)
+            r.material = mat;
+    }
+
+    public void EnablePlacement()
+    {
+        _active = true;
+    }
+
+    public void DisablePlacement()
+    {
+        _active = false;
+        SetPreviewVisible(false);
     }
 
     void Update()
     {
-        if (grid == null) return;
+        if (grid == null || !_active) return;
 
         Ray ray = _cam.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-        // Try hitting a tile collider first; fall back to the y=0 plane.
-        bool hit = TryRaycastTile(ray, out Vector3 worldHit) || TryRaycastGroundPlane(ray, out worldHit);
+        // Placement of toys
+        bool tileHit = TryRaycastTile(ray, out RaycastHit worldHitRaycast);
+        Vector3 worldHit = tileHit? worldHitRaycast.point: Vector3.zero;
 
-        if (hit)
+        if (tileHit)
         {
             _hoveredCell = grid.WorldToCell(worldHit);
-            Vector3 center = grid.GetCellCenterWorld(_hoveredCell);
-            _hasHovered = true;
+            Tile tile = tileHit ? worldHitRaycast.collider.GetComponentInParent<Tile>() : null;
+            Vector3 cellCenter = grid.GetCellCenterWorld(_hoveredCell);
+            Vector3 center = new Vector3(cellCenter.x, worldHit.y, cellCenter.z);
+            bool canPlace = tile != null && tile.isBuildable && !tile.isOccupied;
 
             if (_preview != null)
             {
                 SetPreviewVisible(true);
                 _preview.transform.position = center;
+                SetPreviewMaterial(canPlace ? validPreviewMaterial : invalidPreviewMaterial);
             }
 
-            // Left-click: place object
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-                PlaceObject(center);
+            if (!canPlace){
+                Debug.Log($"Hovering over cell {_hoveredCell} | Not placeable.");
+            }else{
+                Debug.Log($"Hovering over cell {_hoveredCell} | isBuildable={tile.isBuildable} | isWalkableA={tile.isWalkableA} | isWalkableB={tile.isWalkableB}");
+                _hasHovered = true;
 
-            // Right-click: set reference cell for distance measurement
-            if (Mouse.current.rightButton.wasPressedThisFrame)
-            {
-                referenceCell = _hoveredCell;
-                Debug.Log($"Reference cell set to {referenceCell}");
+                // Left-click: place object
+                if (Mouse.current.leftButton.wasPressedThisFrame){
+                    PlaceObject(center);
+                    tile.isOccupied = true; 
+                }
+
+                // Right-click: cancel placement
+
+                float gridDist = GridDistance(_hoveredCell, referenceCell);
+                float worldDist = WorldDistance(_hoveredCell, referenceCell);
+                // Debug.Log($"Hovered: {_hoveredCell} | Grid dist from ref: {gridDist:F0} | World dist: {worldDist:F2}");
             }
-
-            float gridDist = GridDistance(_hoveredCell, referenceCell);
-            float worldDist = WorldDistance(_hoveredCell, referenceCell);
-            Debug.Log($"Hovered: {_hoveredCell} | Grid dist from ref: {gridDist:F0} | World dist: {worldDist:F2}");
         }
         else if (_preview != null)
         {
@@ -74,9 +108,10 @@ public class GridPlacementTest : MonoBehaviour
     void PlaceObject(Vector3 position)
     {
         if (placementPrefab == null) return;
-        Vector3 positionWithOffset = position + new Vector3(0, 1, 0);
-        Instantiate(placementPrefab, positionWithOffset, Quaternion.identity);
-        Debug.Log($"Placed at cell {_hoveredCell}, world {positionWithOffset}");
+        Instantiate(placementPrefab, position, Quaternion.identity);
+        Debug.Log($"Placed at cell {_hoveredCell}, world {position}");
+        DisablePlacement();
+        OnPlaced?.Invoke();
     }
 
     // Manhattan distance in grid space (good for pathfinding heuristics)
@@ -92,28 +127,9 @@ public class GridPlacementTest : MonoBehaviour
         return Vector3.Distance(grid.GetCellCenterWorld(a), grid.GetCellCenterWorld(b));
     }
 
-    bool TryRaycastTile(Ray ray, out Vector3 hitPoint)
+    bool TryRaycastTile(Ray ray, out RaycastHit hit)
     {
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
-        {
-            hitPoint = hit.point;
-            return true;
-        }
-        hitPoint = default;
-        return false;
-    }
-
-    // Fallback: intersect with the horizontal plane at y=0
-    bool TryRaycastGroundPlane(Ray ray, out Vector3 hitPoint)
-    {
-        Plane plane = new Plane(Vector3.up, Vector3.zero);
-        if (plane.Raycast(ray, out float enter))
-        {
-            hitPoint = ray.GetPoint(enter);
-            return true;
-        }
-        hitPoint = default;
-        return false;
+        return Physics.Raycast(ray, out hit, 1000f, floorLayerMask);
     }
 
     void SetPreviewVisible(bool visible)
