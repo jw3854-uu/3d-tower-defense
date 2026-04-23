@@ -12,7 +12,8 @@ public class VoiceInputManager : MonoBehaviour
 
     // Subscribe to this to receive transcription results
     public event Action<string> OnTranscriptionResult;
-    public event Action OnTranscribed;
+    public event Action OnRecordingStarted;
+    public event Action<string> OnTranscribed;
     private bool _active;
 
     MicrophoneRecord _microphone;
@@ -41,11 +42,11 @@ public class VoiceInputManager : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        // Record while pressing Left Shift
-        if (kb.leftShiftKey.wasPressedThisFrame)
+        // Record while pressing R
+        if (kb.rKey.wasPressedThisFrame)
             StartRecording();
 
-        if (kb.leftShiftKey.wasReleasedThisFrame)
+        if (kb.rKey.wasReleasedThisFrame)
             StopRecording();
     }
 
@@ -53,7 +54,7 @@ public class VoiceInputManager : MonoBehaviour
     {
         if (_microphone.IsRecording || _isTranscribing) return;
         _microphone.StartRecord();
-        // Debug.Log("Recording started...");
+        OnRecordingStarted?.Invoke();
     }
 
     void StopRecording()
@@ -81,15 +82,11 @@ public class VoiceInputManager : MonoBehaviour
 
         _isTranscribing = false;
         DisableVoiceInput(); 
-        OnTranscribed?.Invoke();
+        OnTranscribed?.Invoke(text);
     }
 
     void OnDestroy()
     {
         _microphone.OnRecordStop -= OnRecordStop;
     }
-
-    // TODO: check the text and spawn the corresponding objects / toys
-
-
 }

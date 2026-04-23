@@ -7,39 +7,83 @@ public class PlayerBManager : MonoBehaviour
     public float moveSpeed = 5f;
     public float gravity = -9.81f;
     public LayerMask FloorLayerMask;
-    public GridPlacementTest gridPlacement;
     public enum PlayerState {Waiting, Holding, Placing};
     public PlayerState currentState;
 
+    [Header("Projectile")]
+    public GameObject toyPrefab;
+    public Grid grid;
+    public float maxLaunchSpeed = 20f;
+    public float maxChargeTime = 2f;
+    public float arcHeight = 5f;
+
     CharacterController _cc;
     float _verticalVelocity;
+    float _chargeTime;
+    bool _isCharging;
 
     void Awake()
     {
         _cc = GetComponent<CharacterController>();
-        if (gridPlacement != null)
-            gridPlacement.OnPlaced += OnToyPlaced;
-
-        // FOR TESTING
-        currentState = PlayerState.Placing;
+        currentState = PlayerState.Placing; // FOR TESTING
     }
 
-    void OnDestroy()
+    void HandlePlacing()
     {
-        if (gridPlacement != null)
-            gridPlacement.OnPlaced -= OnToyPlaced;
+        if (toyPrefab == null || grid == null) return;
+
+        var mouse = Mouse.current;
+        if (mouse == null) return;
+
+        // Get aim target: raycast from camera through mouse onto ground plane
+        Ray ray = Camera.main.ScreenPointToRay(mouse.position.ReadValue());
+        Plane groundPlane = new Plane(Vector3.up, transform.position);
+        if (!groundPlane.Raycast(ray, out float enter)) return;
+        Vector3 aimTarget = ray.GetPoint(enter);
+
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            _isCharging = true;
+            _chargeTime = 0f;
+        }
+
+        if (_isCharging && mouse.leftButton.isPressed)
+            _chargeTime = Mathf.Min(_chargeTime + Time.deltaTime, maxChargeTime);
+
+        if (_isCharging && mouse.leftButton.wasReleasedThisFrame)
+        {
+            _isCharging = false;
+            ShootToy(aimTarget);
+            // currentState = PlayerState.Waiting;
+        }
     }
 
-    void OnToyPlaced()
+    void ShootToy(Vector3 target)
     {
-        currentState = PlayerState.Waiting;
-        // Debug.Log("Player B has released the object and is now WAITING.");
-    }
+        Vector3 spawnPos = transform.position + Vector3.up;
+        GameObject toy = Instantiate(toyPrefab, spawnPos, Quaternion.identity);
 
-    void HandleToyPlacement()
-    {
-        if (gridPlacement == null) return;
-        gridPlacement.EnablePlacement();
+        ToyProjectile proj = toy.GetComponent<ToyProjectile>();
+        if (proj != null) proj.grid = grid;
+
+        float chargeRatio = _chargeTime / maxChargeTime;
+        float speed = Mathf.Lerp(maxLaunchSpeed * 0.3f, maxLaunchSpeed, chargeRatio);
+
+        Vector3 horizontal = (target - spawnPos);
+        horizontal.y = 0;
+        float dist = horizontal.magnitude;
+        Vector3 dir = horizontal.normalized;
+
+        // Compute vertical velocity needed to arc over arcHeight and reach target
+        float vUp = Mathf.Sqrt(2f * Mathf.Abs(Physics.gravity.y) * arcHeight);
+        float timeUp = vUp / Mathf.Abs(Physics.gravity.y);
+        float timeDown = Mathf.Sqrt(2f * (arcHeight + Mathf.Max(0, spawnPos.y - target.y)) / Mathf.Abs(Physics.gravity.y));
+        float totalTime = timeUp + timeDown;
+        float hSpeed = dist / totalTime;
+
+        Vector3 launchVelocity = dir * hSpeed * chargeRatio + Vector3.up * vUp;
+
+        toy.GetComponent<Rigidbody>().linearVelocity = launchVelocity;
     }
 
     bool IsWalkableB(Vector3 position)
@@ -83,12 +127,10 @@ public class PlayerBManager : MonoBehaviour
 
         if (currentState == PlayerState.Waiting){
             // Picking up object logic
-        }else if (currentState == PlayerState.Holding){
+        } else if (currentState == PlayerState.Holding){
             // Add magic in the toy
-        }
-        if (currentState == PlayerState.Placing){
-            // Handle toy placement
-            HandleToyPlacement();
+        } else if (currentState == PlayerState.Placing){
+            HandlePlacing();
         }
     }
 }
