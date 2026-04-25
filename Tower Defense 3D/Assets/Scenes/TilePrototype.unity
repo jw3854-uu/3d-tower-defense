@@ -13744,7 +13744,7 @@ GameObject:
   - component: {fileID: 640194540}
   - component: {fileID: 640194542}
   - component: {fileID: 640194541}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player B Area Top
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14645,7 +14645,7 @@ GameObject:
   - component: {fileID: 686776495}
   - component: {fileID: 686776497}
   - component: {fileID: 686776496}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player A Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19274,7 +19274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaunchManager
   toyBelt: {fileID: 1875717117}
-  maxPitchDegrees: 60
+  maxPitchDegrees: 45
   maxYawDegrees: 90
   aimSpeed: 45
   minLaunchSpeed: 5
@@ -25430,7 +25430,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1214451939}
   - component: {fileID: 1214451938}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34623,7 +34623,7 @@ GameObject:
   - component: {fileID: 1618050039}
   - component: {fileID: 1618050041}
   - component: {fileID: 1618050040}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Enemy Path
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36916,7 +36916,7 @@ GameObject:
   - component: {fileID: 1708491133}
   - component: {fileID: 1708491135}
   - component: {fileID: 1708491134}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player B Area Bot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42165,7 +42165,7 @@ GameObject:
   - component: {fileID: 2004289178}
   - component: {fileID: 2004289180}
   - component: {fileID: 2004289179}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Base Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -180,6 +180,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15a16880953414b75ae5d28afd4bdfc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToyManager
+  grid: {fileID: 0}
+  floorMask:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &6499551635320812322
 GameObject:
   m_ObjectHideFlags: 0

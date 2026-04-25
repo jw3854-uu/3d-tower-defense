@@ -35,7 +35,6 @@ public class PlayerAManager : MonoBehaviour
 
         voiceInputManager.DisableVoiceInput();
 
-        // FOR TESTING
         currentState = PlayerState.Waiting;
     } 
 
@@ -56,12 +55,15 @@ public class PlayerAManager : MonoBehaviour
         _voiceSessionActive = false;
         _isCloseToBin = false;
         // TODO: check for multiple toy commands
-        if (text.ToLower().Contains("toy"))
-        {
-            // Debug.Log("[Player A Manager]: Voice command successful, spawning toy.");
-            _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
-            currentState = PlayerState.Holding;
-        }
+        // if (text.ToLower().Contains("toy"))
+        // {
+        //     // Debug.Log("[Player A Manager]: Voice command successful, spawning toy.");
+        //     _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
+        //     currentState = PlayerState.Holding;
+        // }
+
+        _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
+        currentState = PlayerState.Holding;
     }
 
     bool IsWalkableA(Vector3 position)

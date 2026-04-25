@@ -45,7 +45,7 @@ public class LaunchManager : MonoBehaviour
         _loadedToy = toy;
         // Snap toy to launcher muzzle
         toy.transform.SetParent(transform);
-        toy.transform.localPosition = Vector3.zero;
+        toy.transform.localPosition = Vector3.up * 0.5f;
         Rigidbody rb = toy.GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -117,6 +117,7 @@ public class LaunchManager : MonoBehaviour
         }
 
         Debug.Log($"[LaunchManager] Launched at speed {speed:F1} (charge {chargeRatio:P0})");
+        _loadedToy.GetComponent<ToyManager>().Arm();
         _loadedToy = null;
     }
 }
