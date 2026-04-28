@@ -54,13 +54,13 @@ public class PlayerAManager : MonoBehaviour
     void OnVoiceTranscribed(string text){
         _voiceSessionActive = false;
         _isCloseToBin = false;
-        // TODO: check for multiple toy commands
-        // if (text.ToLower().Contains("toy"))
-        // {
-        //     // Debug.Log("[Player A Manager]: Voice command successful, spawning toy.");
-        //     _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
-        //     currentState = PlayerState.Holding;
-        // }
+
+        int cost = toySpawner.toyPrefab?.GetComponent<Toy>()?.Price ?? 0;
+        if (GameManager.Instance != null && !GameManager.Instance.SpendMoney(cost))
+        {
+            Debug.Log($"[PlayerAManager] Cannot afford toy (costs {cost}). Pickup blocked.");
+            return;
+        }
 
         _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
         currentState = PlayerState.Holding;
