@@ -41,10 +41,21 @@ public class ToyManager : MonoBehaviour
             transform.position = new Vector3(cellCenter.x, hit.point.y, cellCenter.z);
             transform.rotation = Quaternion.identity;
 
+            Toy toy = GetComponent<Toy>();
+            // int cost = toy != null ? toy.Price : 0;
+            // if (GameManager.Instance != null && !GameManager.Instance.SpendMoney(cost))
+            // {
+            //     Debug.Log($"[ToyManager] Cannot afford toy (costs {cost}). Destroying.");
+            //     Destroy(gameObject);
+            //     yield break;
+            // }
+
             tile.isOccupied = true;
 
             GetComponent<Rigidbody>().isKinematic = true;
             GetComponent<Collider>().enabled = false;
+
+            toy?.Activate();
         }
         else
         {

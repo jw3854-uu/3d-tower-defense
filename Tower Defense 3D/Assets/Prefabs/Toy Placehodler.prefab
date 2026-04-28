@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: -44118144251063208}
   - component: {fileID: -369549534682170775}
   - component: {fileID: -8987080649723932302}
+  - component: {fileID: -9076129910030560165}
   m_Layer: 0
   m_Name: Toy Placehodler
   m_TagString: Untagged
@@ -184,6 +185,22 @@ MonoBehaviour:
   floorMask:
     serializedVersion: 2
     m_Bits: 64
+--- !u!114 &-9076129910030560165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3516308205508735954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 121785e0620e941138accd222afe89d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Toy
+  damage: 20
+  attacksPerSecond: 1
+  attackRange: 3
+  price: 50
 --- !u!1 &6499551635320812322
 GameObject:
   m_ObjectHideFlags: 0
