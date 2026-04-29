@@ -6,6 +6,13 @@ public class ToyManager : MonoBehaviour
     public Grid grid;
     public LayerMask floorMask;
 
+    Vector3 _basePrefabPosition;
+
+    void Awake()
+    {
+        _basePrefabPosition = transform.localPosition;
+    }
+
     void Start()
     {
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -38,7 +45,7 @@ public class ToyManager : MonoBehaviour
             Debug.Log($"[ToyManager] Toy landed on buildable tile: {tile.name}");
             Vector3Int cell = grid.WorldToCell(transform.position);
             Vector3 cellCenter = grid.GetCellCenterWorld(cell);
-            transform.position = new Vector3(cellCenter.x, hit.point.y, cellCenter.z);
+            transform.position = new Vector3(cellCenter.x, hit.point.y + _basePrefabPosition.y, cellCenter.z);
             transform.rotation = Quaternion.identity;
 
             Toy toy = GetComponent<Toy>();

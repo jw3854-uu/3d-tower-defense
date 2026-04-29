@@ -19,7 +19,7 @@ public class PlayerAManager : MonoBehaviour
     public ToyTypeCatalog toyCatalog;
 
     [Header("Recording Bar")]
-    [Tooltip("Prefab with a world-space Canvas + Slider inside. Leave empty to use a built-in fallback bar.")]
+    [Tooltip("Prefab with a world-space Canvas + Slider inside.")]
     [SerializeField] GameObject recordingBarPrefab;
     [SerializeField] float maxRecordingTime = 10f;
     [SerializeField] Vector3 recordingBarOffset = new Vector3(0f, 1.8f, 0f);
@@ -27,7 +27,6 @@ public class PlayerAManager : MonoBehaviour
     float _recordingElapsed;
     GameObject _recordingBarInstance;
     Slider _recordingSlider;
-    Image _fallbackFill;
 
     bool _isCloseToBin;
     bool _isCloseToBelt;
@@ -73,62 +72,20 @@ public class PlayerAManager : MonoBehaviour
     {
         if (_recordingBarInstance != null) Destroy(_recordingBarInstance);
         _recordingSlider = null;
-        _fallbackFill = null;
 
-        if (recordingBarPrefab != null)
+        if (recordingBarPrefab == null) return;
+
+        _recordingBarInstance = Instantiate(recordingBarPrefab);
+        _recordingSlider = _recordingBarInstance.GetComponentInChildren<Slider>(true);
+        if (_recordingSlider == null)
         {
-            _recordingBarInstance = Instantiate(recordingBarPrefab);
-            _recordingSlider = _recordingBarInstance.GetComponentInChildren<Slider>(true);
-            if (_recordingSlider != null)
-            {
-                _recordingSlider.minValue = 0f;
-                _recordingSlider.maxValue = 1f;
-                _recordingSlider.value = 0f;
-                _recordingSlider.interactable = false;
-            }
+            Debug.LogError("[PlayerAManager] RecordingBarPrefab has no Slider component in children.");
+            return;
         }
-        else
-        {
-            _recordingBarInstance = BuildFallbackBar();
-        }
-    }
-
-    GameObject BuildFallbackBar()
-    {
-        var canvasGO = new GameObject("RecordingBarCanvas");
-        var canvas = canvasGO.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvasGO.AddComponent<CanvasScaler>();
-        canvasGO.GetComponent<RectTransform>().sizeDelta = new Vector2(1f, 0.1f);
-
-        var bg = new GameObject("BG");
-        bg.transform.SetParent(canvasGO.transform, false);
-        var bgImg = bg.AddComponent<Image>();
-        bgImg.color = new Color(0.15f, 0.15f, 0.15f);
-        StretchRect(bg.GetComponent<RectTransform>());
-
-        var fill = new GameObject("Fill");
-        fill.transform.SetParent(canvasGO.transform, false);
-        _fallbackFill = fill.AddComponent<Image>();
-        _fallbackFill.color = Color.yellow;
-        _fallbackFill.type = Image.Type.Filled;
-        _fallbackFill.fillMethod = Image.FillMethod.Horizontal;
-        _fallbackFill.fillAmount = 0f;
-        var fillRt = fill.GetComponent<RectTransform>();
-        fillRt.anchorMin = Vector2.zero;
-        fillRt.anchorMax = Vector2.one;
-        fillRt.offsetMin = Vector2.zero;
-        fillRt.offsetMax = Vector2.zero;
-
-        return canvasGO;
-    }
-
-    static void StretchRect(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        _recordingSlider.minValue = 0f;
+        _recordingSlider.maxValue = 1f;
+        _recordingSlider.value = 0f;
+        _recordingSlider.interactable = false;
     }
 
     void UpdateRecordingBar()
@@ -145,17 +102,16 @@ public class PlayerAManager : MonoBehaviour
 
         if (voiceInputManager != null && voiceInputManager.IsRecording)
         {
+            // Debug.Log($"[PlayerAManager] Recording... {_recordingElapsed:F1}s");
             _recordingElapsed += Time.deltaTime;
             float t = Mathf.Clamp01(_recordingElapsed / maxRecordingTime);
             if (_recordingSlider != null) _recordingSlider.value = t;
-            else if (_fallbackFill != null) _fallbackFill.fillAmount = t;
         }
         else if (_recordingElapsed > 0f)
         {
             Destroy(_recordingBarInstance);
             _recordingBarInstance = null;
             _recordingSlider = null;
-            _fallbackFill = null;
         }
     }
 
@@ -243,6 +199,7 @@ public class PlayerAManager : MonoBehaviour
                 // Debug.Log("Player A is close to the toy belt. Press Space to place toy.");
                 if (kb.spaceKey.wasPressedThisFrame)
                 {
+                    Debug.Log("Placing toy on belt, _currentToy=" + (_currentToy != null ? _currentToy.name : "null"));
                     toyBelt.PlaceToy(_currentToy);
                     _currentToy = null;
                     currentState = PlayerState.Waiting;

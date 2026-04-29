@@ -15588,6 +15588,7 @@ MonoBehaviour:
     - "\u5B50\u5F39"
     - "\u53D1\u5C04"
     - "\u7784\u51C6"
+    - "\u57FA\u790E"
   - typeName: "\u7F3A\u9677\u9632\u5FA1\u5854"
     prefab: {fileID: 8936766727913691151, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
     triggerWords:
@@ -20750,7 +20751,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1037877641
 RectTransform:
   m_ObjectHideFlags: 0
@@ -21197,7 +21198,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1053209441
 RectTransform:
   m_ObjectHideFlags: 0
@@ -27933,7 +27934,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1365213582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30162,7 +30163,7 @@ GameObject:
   - component: {fileID: 1474024635}
   - component: {fileID: 1474024636}
   m_Layer: 0
-  m_Name: Player A Placeholder
+  m_Name: Player A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30311,10 +30312,10 @@ MonoBehaviour:
   toySpawner: {fileID: 780222990}
   toyBelt: {fileID: 1875717117}
   toyCatalog: {fileID: 780222995}
-  recordingBarPrefab: {fileID: 0}
+  recordingBarPrefab: {fileID: 6896605602572133148, guid: 6eae05dbb484a47cc892173b29083cff, type: 3}
   maxRecordingTime: 10
   recordingBarOffset: {x: 0, y: 1.5, z: 0}
-  toyOffset: {x: 0, y: 0.5, z: 0.5}
+  toyOffset: {x: 0, y: 0, z: -0.5}
 --- !u!114 &1474024636
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31650,7 +31651,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1536979811
 RectTransform:
   m_ObjectHideFlags: 0
@@ -41228,7 +41229,7 @@ MonoBehaviour:
   initOnAwake: 1
   useGpu: 0
   flashAttention: 0
-  language: en
+  language: zh
   translateToEnglish: 0
   strategy: 0
   noContext: 1
