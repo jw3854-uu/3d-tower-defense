@@ -6,8 +6,10 @@ public class Enemy : MonoBehaviour
 {
     [Header("Stats")]
     [SerializeField] float maxHp = 50f;
+    [SerializeField] float enemyOffset = 0f;
     [SerializeField] float speed = 0.5f;    // tiles per second
-    [SerializeField] float armor = 0f;
+    [Range(0f, 1f)]
+    [SerializeField] float armor = 0f;   // fraction: 0 = no reduction, 0.5 = 50%
     [SerializeField] int killReward = 10;
 
     [Header("Health Bar")]
@@ -21,6 +23,8 @@ public class Enemy : MonoBehaviour
     List<Vector3> _waypoints;
     int _index;
 
+    Quaternion _baseRotation;
+
     Image _hpFill;
     Transform _barCanvas;
     Camera _cam;
@@ -28,6 +32,7 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         _cam = Camera.main;
+        _baseRotation = transform.rotation;
         _currentHp = maxHp;
         BuildHealthBar();
 
@@ -37,7 +42,7 @@ public class Enemy : MonoBehaviour
             Debug.LogError("Enemy: No waypoints available.");
             return;
         }
-        transform.position = _waypoints[0];
+        transform.position = _waypoints[0] + Vector3.up * enemyOffset;
         _index = 1;
     }
 
@@ -45,7 +50,7 @@ public class Enemy : MonoBehaviour
     {
         var canvasGO = new GameObject("HealthBarCanvas");
         canvasGO.transform.SetParent(transform);
-        canvasGO.transform.localPosition = Vector3.up * barYOffset;
+        canvasGO.transform.localPosition = Vector3.zero;
 
         var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -88,6 +93,7 @@ public class Enemy : MonoBehaviour
         // Health bar always faces the camera
         if (_barCanvas != null && _cam != null)
         {
+            _barCanvas.localPosition = transform.InverseTransformDirection(Vector3.up) * barYOffset;
             _barCanvas.LookAt(_cam.transform);
             _barCanvas.Rotate(0f, 180f, 0f);
         }
@@ -100,21 +106,21 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        Vector3 target = _waypoints[_index];
+        Vector3 target = _waypoints[_index] + Vector3.up * enemyOffset;
         transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
 
         Vector3 dir = target - transform.position;
         if (dir.sqrMagnitude > 0.001f)
-            transform.forward = dir.normalized;
+            transform.rotation = Quaternion.LookRotation(dir.normalized) * _baseRotation;
 
         if (Vector3.Distance(transform.position, target) < 0.05f)
             _index++;
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, bool ignoresArmor = false)
     {
-        float effective = Mathf.Max(0f, damage - armor);
-        _currentHp = Mathf.Max(0f, _currentHp - effective);
+        float effective = ignoresArmor ? damage : damage * (1f - armor);
+        _currentHp = Mathf.Max(0f, _currentHp - Mathf.Max(0f, effective));
         RefreshBar();
         if (_currentHp <= 0f) Die();
     }

@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &6420451580487425246
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.4305584
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.4305584
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.4305584
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -5.47
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -11.66
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -6.39
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.78631294
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.6178285
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 76.315
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      propertyPath: m_Name
+      value: ROBOT F
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects:
+    - {fileID: -8700617353114198275, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+    - {fileID: 65702495048144492, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2158664740950965053}
+  m_SourcePrefab: {fileID: 100100000, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+--- !u!1 &6186660988083855759 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 7db0214326d9cb3488a163eade26bfb7, type: 3}
+  m_PrefabInstance: {fileID: 6420451580487425246}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-2158664740950965053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186660988083855759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d58cf9c2ba9bf4ae8b326fe035b5c6ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Enemy
+  maxHp: 50
+  enemyOffset: 0.7
+  speed: 0.5
+  armor: 0
+  killReward: 10
+  barWidth: 1
+  barHeight: 0.12
+  barYOffset: 3

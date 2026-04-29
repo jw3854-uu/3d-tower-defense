@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &1507415919564563288
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 11.612
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 11.6119995
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 11.6119995
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.3016214
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -11.898367
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.840001
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      propertyPath: m_Name
+      value: Armor Enemy
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6469417485213889187}
+  m_SourcePrefab: {fileID: 100100000, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+--- !u!1 &1741207621142519305 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 143e271586f955b46bcf202bc7d07d78, type: 3}
+  m_PrefabInstance: {fileID: 1507415919564563288}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-6469417485213889187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1741207621142519305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d58cf9c2ba9bf4ae8b326fe035b5c6ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Enemy
+  maxHp: 150
+  enemyOffset: 1
+  speed: 0.5
+  armor: 0.5
+  killReward: 30
+  barWidth: 1
+  barHeight: 0.12
+  barYOffset: 0.1
