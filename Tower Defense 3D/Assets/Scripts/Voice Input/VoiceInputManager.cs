@@ -15,6 +15,7 @@ public class VoiceInputManager : MonoBehaviour
     public event Action OnRecordingStarted;
     public event Action<string> OnTranscribed;
     private bool _active;
+    public bool IsRecording => _microphone != null && _microphone.IsRecording;
 
     MicrophoneRecord _microphone;
     bool _isTranscribing;

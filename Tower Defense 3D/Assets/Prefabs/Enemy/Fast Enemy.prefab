@@ -100,4 +100,4 @@ MonoBehaviour:
   killReward: 15
   barWidth: 1
   barHeight: 0.12
-  barYOffset: 6
+  barYOffset: 6.5
