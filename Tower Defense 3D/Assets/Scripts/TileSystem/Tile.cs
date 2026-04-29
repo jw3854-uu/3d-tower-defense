@@ -6,7 +6,9 @@ public class Tile : MonoBehaviour
     public bool isWalkableA;      // A player walking area
     public bool isWalkableB;      // B player walking area
     public bool isBuildable;      // available positions for toys
-    public bool isEnemyPath;     
+    public bool isEnemyPath;
+    public bool isPathStart;
+    public bool isPathEnd;
     public bool isOccupied;
     // public float movementCost;    // for pathfinding weight (1 = normal)
     // public Color debugColor;      // cube tint in placeholder mode
