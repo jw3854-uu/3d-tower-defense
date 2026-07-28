@@ -5,9 +5,24 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Prototype 1.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Menu/Menu Main.unity
+    guid: 2c4b95e86943847e9b0a0319c209e727
+  - enabled: 0
+    path: Assets/Scenes/TilePrototype.unity
+    guid: e771d8231129747fd9080d0b85abd4e0
+  - enabled: 1
+    path: Assets/Scenes/Menu/Character Select.unity
+    guid: 8b789871e7cfc4409ae49b849e47425e
+  - enabled: 1
+    path: Assets/Scenes/Cutscene.unity
+    guid: 38923fbc29e054ae68576a2adb15ebc2
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level1.unity
+    guid: 26f334d1c2eb249efaf075e104c3ad31
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

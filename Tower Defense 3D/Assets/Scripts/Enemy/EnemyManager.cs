@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
 [System.Serializable]
 public struct WaveDefinition
@@ -31,8 +32,12 @@ public class EnemyManager : MonoBehaviour
     [Header("Waves")]
     [SerializeField] WaveDefinition[] waves;
 
-    void Start()
+    // Called by LevelManager once it's server and the scene load has fully completed —
+    // not from Start(), so we can't race Netcode's own scene-object registration the
+    // same way LevelManager's player spawn once did.
+    public void BeginWaves()
     {
+        if (!NetworkManager.Singleton.IsServer) return;
         if (waves == null || waves.Length == 0) return;
         StartCoroutine(RunAllWaves());
     }
@@ -69,7 +74,10 @@ public class EnemyManager : MonoBehaviour
         foreach (var prefab in pool)
         {
             if (prefab != null)
-                Instantiate(prefab, EnemyPath.Instance.Waypoints[0], prefab.transform.rotation);
+            {
+                var enemy = Instantiate(prefab, EnemyPath.Instance.Waypoints[0], prefab.transform.rotation);
+                enemy.GetComponent<NetworkObject>().Spawn();
+            }
             yield return new WaitForSeconds(wave.spawnInterval);
         }
     }

@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ca54f32585cf447e7a9fadf0264b6608, type: 2}
+  - {fileID: 2100000, guid: 5dce2a2d78c854362973efe80ebcb403, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -129,4 +129,6 @@ MonoBehaviour:
   isWalkableB: 0
   isBuildable: 1
   isEnemyPath: 0
+  isPathStart: 0
+  isPathEnd: 0
   isOccupied: 0

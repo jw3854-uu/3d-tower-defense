@@ -1,123 +1,105 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using Unity.Netcode;
 
-public class LaunchManager : MonoBehaviour
+// Combines A and B's joint contribution to a throw. A and B each continuously sync
+// their own livePitch NetworkVariable (see PlayerAManager/PlayerBManager); this class
+// reads both directly every frame to drive its own elevation angle in real time —
+// no report/commit RPC needed, the values are already synced.
+public class LaunchManager : NetworkBehaviour
 {
     [Header("References")]
-    public ToyBelt toyBelt;
+    [Tooltip("A/B's live data lives on their own managers (correct NetworkVariable ownership), read from here.")]
+    [SerializeField] PlayerAManager playerA;
+    [SerializeField] PlayerBManager playerB;
 
-    [Header("Aim")]
-    public float maxPitchDegrees = 60f;
-    public float maxYawDegrees = 90f;
-    public float aimSpeed = 45f; // degrees per second
+    [Header("Elevation (driven live by A/B pitch difference)")]
+    [Tooltip("livePitch arrives as raw Hz from PitchTracker — normalized here, not at the source, so both players share one tunable vocal range.")]
+    [SerializeField] float pitchMinHz = 100f;
+    [SerializeField] float pitchMaxHz = 400f;
+    [SerializeField] float maxElevationDegrees = 60f;
+    Quaternion _initialRotation;
 
     [Header("Launch")]
-    public float minLaunchSpeed = 5f;
-    public float maxLaunchSpeed = 30f;
-    public float maxChargeTime = 2f;
+    [SerializeField] float launchSpeed = 15f; // TODO: decide what (if anything) should vary this
 
-    GameObject _loadedToy;
-    Quaternion _initialRotation;
-    float _currentPitch;
-    float _currentYaw;
-    bool _isCharging;
-    float _chargeTime;
+    GameObject _loadedToyPrefab; // set by RequestLoadToyRpc once A picks a toy and the server confirms the spend
+    GameObject toyInstance;
+
+    // Each player's raw Hz is normalized to a 0..1 fraction of the shared vocal range
+    // before diffing, so the result is naturally bounded to [-1, 1] with no extra clamp.
+    public float CurrentPitchDiff => NormalizedPitch(playerA.livePitch.Value) - NormalizedPitch(playerB.livePitch.Value);
+    public bool BothRecording => playerA.isRecordingHeight.Value && playerB.isRecordingHeight.Value;
+
+    float NormalizedPitch(float hz) => Mathf.InverseLerp(pitchMinHz, pitchMaxHz, hz);
 
     void Awake()
     {
         _initialRotation = transform.rotation;
-    }
-
-    void OnEnable()
-    {
-        if (toyBelt != null)
-            toyBelt.OnToyArrived += OnToyArrived;
-    }
-
-    void OnDisable()
-    {
-        if (toyBelt != null)
-            toyBelt.OnToyArrived -= OnToyArrived;
-    }
-
-    void OnToyArrived(GameObject toy)
-    {
-        _loadedToy = toy;
-        // Snap toy to launcher muzzle
-        toy.transform.SetParent(transform);
-        toy.transform.localPosition = Vector3.up * 0.5f;
-        Rigidbody rb = toy.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.isKinematic = true;
-            rb.linearVelocity = Vector3.zero;
-        }
-        Debug.Log($"[LaunchManager] Toy loaded: {toy.name}");
+        playerA = FindFirstObjectByType<PlayerAManager>();
+        playerB = FindFirstObjectByType<PlayerBManager>();
     }
 
     void Update()
     {
-        if (_loadedToy == null) return;
-
-        HandleAim();
-        HandleCharge();
+        // Runs identically on every machine — CurrentPitchDiff is already synced,
+        // so this needs no networking of its own, just a local read every frame.
+        float elevation = CurrentPitchDiff * maxElevationDegrees;
+        transform.rotation = Quaternion.AngleAxis(playerB.aimYaw.Value, Vector3.up) * _initialRotation * Quaternion.Euler(-elevation, 0f, 0f);
     }
 
-    void HandleAim()
+    // Called by PlayerAManager once local voice recognition matches a toy.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void RequestLoadToyRpc(string typeName, RpcParams rpcParams = default)
     {
-        var kb = Keyboard.current;
-        if (kb == null) return;
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (PlayerSessionData.Instance.playerASlotOwner.Value != senderId) return; // only A can load a toy
 
-        float pitchInput = (kb.upArrowKey.isPressed ? 1 : 0) - (kb.downArrowKey.isPressed ? 1 : 0);
-        float yawInput   = (kb.rightArrowKey.isPressed ? 1 : 0) - (kb.leftArrowKey.isPressed ? 1 : 0);
+        var toyData = ToyCatalog.Instance?.FindByTypeName(typeName);
+        if (toyData == null)
+        {
+            Debug.Log($"[LaunchManager] No catalog entry for \"{typeName}\".");
+            return;
+        }
+        if (!LevelManager.Instance.SpendMoney(toyData.Cost))
+        {
+            Debug.Log($"[LaunchManager] Cannot afford {typeName} (costs {toyData.Cost}).");
+            return;
+        }
 
-        _currentPitch = Mathf.Clamp(_currentPitch + pitchInput * aimSpeed * Time.deltaTime, -maxPitchDegrees, maxPitchDegrees);
-        _currentYaw   = Mathf.Clamp(_currentYaw   + yawInput   * aimSpeed * Time.deltaTime, -maxYawDegrees,   maxYawDegrees);
-
-        // Yaw around world Y, pitch around initial local X
-        Quaternion yawRot = Quaternion.AngleAxis(_currentYaw, Vector3.up);
-        Quaternion pitchRot = Quaternion.Euler(-_currentPitch, 0f, 0f);
-        transform.rotation = yawRot * _initialRotation * pitchRot;
+        _loadedToyPrefab = toyData.Prefab.prefab;
+        Debug.Log($"[LaunchManager] Loaded {typeName}, ready to launch.");
+        toyInstance = Instantiate(_loadedToyPrefab, transform.position, transform.rotation);
+        toyInstance.GetComponent<NetworkObject>().Spawn();
     }
 
-    void HandleCharge()
+    // Called by PlayerBManager when B presses Space to throw.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void RequestLaunchRpc(RpcParams rpcParams = default)
     {
-        var mouse = Mouse.current;
-        if (mouse == null) return;
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (PlayerSessionData.Instance.playerBSlotOwner.Value != senderId) return; // only B can pull the trigger
 
-        if (mouse.leftButton.wasPressedThisFrame)
-        {
-            _isCharging = true;
-            _chargeTime = 0f;
-        }
-
-        if (_isCharging && mouse.leftButton.isPressed)
-            _chargeTime = Mathf.Min(_chargeTime + Time.deltaTime, maxChargeTime);
-
-        if (_isCharging && mouse.leftButton.wasReleasedThisFrame)
-        {
-            _isCharging = false;
-            Launch();
-        }
+        Launch();
+        playerA.isRecordingHeight.Value = false;
+        playerB.isRecordingHeight.Value = false;
     }
 
     void Launch()
     {
-        if (_loadedToy == null) return;
+        if (_loadedToyPrefab == null)
+        {
+            Debug.Log($"[LaunchManager] Would launch at speed {launchSpeed:F1} along current elevation, but no toy is loaded yet.");
+            return;
+        }
 
-        float chargeRatio = _chargeTime / maxChargeTime;
-        float speed = Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, chargeRatio);
-
-        _loadedToy.transform.SetParent(null);
-        Rigidbody rb = _loadedToy.GetComponent<Rigidbody>();
+        Rigidbody rb = toyInstance?.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.isKinematic = false;
-            rb.linearVelocity = transform.forward * speed;
+            rb.linearVelocity = transform.forward * launchSpeed; // transform already reflects live elevation + B's yaw
         }
 
-        Debug.Log($"[LaunchManager] Launched at speed {speed:F1} (charge {chargeRatio:P0})");
-        _loadedToy.GetComponent<ToyManager>().Arm();
-        _loadedToy = null;
+        Debug.Log($"[LaunchManager] Launched {_loadedToyPrefab.name} at speed {launchSpeed:F1}");
+        _loadedToyPrefab = null;
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
+using Unity.Netcode;
 
-public class Toy : MonoBehaviour
+public class Toy : NetworkBehaviour
 {
     [Header("Stats")]
     [SerializeField] float damage = 20f;
@@ -9,18 +10,23 @@ public class Toy : MonoBehaviour
     [SerializeField] int price = 50;
 
     float _cooldown;
-    bool _active;
+
+    // Server-writable — set true once ToyManager confirms a valid landing spot.
+    // Everyone can read it in case UI ever wants to react (e.g. show/hide a range ring).
+    NetworkVariable<bool> _active = new NetworkVariable<bool>(
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     // Called by ToyManager once the toy has successfully landed on a valid tile
     public void Activate()
     {
-        _active = true;
+        _active.Value = true;
         Debug.Log($"[Toy] {gameObject.name} activated.");
     }
 
     void Update()
     {
-        if (!_active) return;
+        if (!_active.Value) return;
+        if (!IsServer) return; // Attack decisions (and the TakeDamageRpc they trigger) are server-only
 
         _cooldown -= Time.deltaTime;
         if (_cooldown > 0f) return;
@@ -28,7 +34,7 @@ public class Toy : MonoBehaviour
         Enemy target = FindLowestHpInRange();
         if (target == null) return;
 
-        target.TakeDamage(damage);
+        target.TakeDamageRpc(damage);
         _cooldown = 1f / attacksPerSecond;
     }
 

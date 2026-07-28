@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
 
-public class Enemy : MonoBehaviour
+public class Enemy : NetworkBehaviour
 {
     [Header("Stats")]
     [SerializeField] float maxHp = 50f;
@@ -17,25 +18,32 @@ public class Enemy : MonoBehaviour
     [SerializeField] float barHeight = 0.12f;
     [SerializeField] float barYOffset = 1.3f;
 
-    float _currentHp;
-    public float CurrentHp => _currentHp;
+    // Server-writable — the single source of truth. Every client's health bar just
+    // reacts to OnValueChanged instead of computing its own HP.
+    NetworkVariable<float> _currentHp = new NetworkVariable<float>(
+        0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public float CurrentHp => _currentHp.Value;
 
     List<Vector3> _waypoints;
     int _index;
 
     Quaternion _baseRotation;
-
     Image _hpFill;
     Transform _barCanvas;
     Camera _cam;
 
-    void Start()
+    public override void OnNetworkSpawn()
     {
+        // Visual-only setup — every machine builds its own health bar UI.
         _cam = Camera.main;
         _baseRotation = transform.rotation;
-        _currentHp = maxHp;
         BuildHealthBar();
+        _currentHp.OnValueChanged += (oldHp, newHp) => RefreshBar();
 
+        if (!IsServer) return;
+
+        // Authority-only: server owns HP and movement.
+        _currentHp.Value = maxHp;
         _waypoints = EnemyPath.Instance?.Waypoints;
         if (_waypoints == null || _waypoints.Count == 0)
         {
@@ -78,6 +86,8 @@ public class Enemy : MonoBehaviour
         fillRt.offsetMin = Vector2.zero;
         fillRt.offsetMax = Vector2.zero;
         fillRt.pivot = new Vector2(0f, 0.5f);
+
+        RefreshBar();
     }
 
     static void StretchRect(RectTransform rt)
@@ -90,7 +100,7 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        // Health bar always faces the camera
+        // Health bar always faces the camera — purely visual, every machine does its own.
         if (_barCanvas != null && _cam != null)
         {
             _barCanvas.localPosition = transform.InverseTransformDirection(Vector3.up) * barYOffset;
@@ -98,11 +108,12 @@ public class Enemy : MonoBehaviour
             _barCanvas.Rotate(0f, 180f, 0f);
         }
 
+        if (!IsServer) return; // Only the server moves enemies and decides death/reaching the end
         if (_waypoints == null) return;
         if (_index >= _waypoints.Count)
         {
-            GameManager.Instance?.EnemyReachedEnd();
-            Destroy(gameObject);
+            LevelManager.Instance?.EnemyReachedEnd();
+            NetworkObject.Despawn();
             return;
         }
 
@@ -117,27 +128,30 @@ public class Enemy : MonoBehaviour
             _index++;
     }
 
-    public void TakeDamage(float damage, bool ignoresArmor = false)
+    // Whoever detects the hit (a Toy) calls this instead of touching HP directly.
+    // Only the server actually applies damage — this is the single authority for HP/death.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void TakeDamageRpc(float damage, bool ignoresArmor = false)
     {
         float effective = ignoresArmor ? damage : damage * (1f - armor);
-        _currentHp = Mathf.Max(0f, _currentHp - Mathf.Max(0f, effective));
-        RefreshBar();
-        if (_currentHp <= 0f) Die();
+        _currentHp.Value = Mathf.Max(0f, _currentHp.Value - Mathf.Max(0f, effective));
+        if (_currentHp.Value <= 0f) Die();
     }
 
     void RefreshBar()
     {
         if (_hpFill == null) return;
-        float ratio = _currentHp / maxHp;
+        float ratio = _currentHp.Value / maxHp;
         var rt = _hpFill.GetComponent<RectTransform>();
         rt.anchorMax = new Vector2(ratio, 1f);
         _hpFill.color = Color.Lerp(Color.red, Color.green, ratio);
     }
 
+    // Server-only: award money then despawn, which removes the object on every client.
     void Die()
     {
-        GameManager.Instance?.AddMoney(killReward);
-        Destroy(gameObject);
+        LevelManager.Instance?.AddMoney(killReward);
+        NetworkObject.Despawn();
     }
 
     public bool HasReachedEnd() => _waypoints != null && _index >= _waypoints.Count;

@@ -1,25 +1,46 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Unity.Netcode;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerAManager : MonoBehaviour
+public class PlayerAManager : NetworkBehaviour 
 {
-    public float moveSpeed = 5f;
-    public float gravity = -9.81f;
-    public LayerMask FloorLayerMask;
+    [Header("Movement")]
+    [SerializeField] float moveSpeed = 5f;
+    [SerializeField] float gravity = -9.81f;
+    [SerializeField] LayerMask FloorLayerMask;
+    CharacterController _cc;
+    float _verticalVelocity;
+    Quaternion _baseRotation;
 
-    public enum PlayerState {Waiting, Holding};
-    public PlayerState currentState;
+    // public enum PlayerState {Step1, Step2};
+    // public PlayerState currentState;
 
-    public VoiceInputManager voiceInputManager;
-    public SpawnToy toySpawner;
-    public ToyBelt toyBelt;
+    // [Header("Vosk Detection")]
+    // [SerializeField] 
+    // public MicCaptureManager micCaptureManager;
+    // public SpawnToy toySpawner;
+    // public ToyBelt toyBelt;
 
-    public ToyTypeCatalog toyCatalog;
+    [Header("References")]
+    [SerializeField] LaunchManager launchManager;
 
-    [Header("Recording Bar")]
-    [Tooltip("Prefab with a world-space Canvas + Slider inside. Leave empty to use a built-in fallback bar.")]
+    [Header("Launcher Angle Contribution (joint with B)")]
+    // [SerializeField] float maxHeightHoldTime = 3f;
+    bool _isRecordingHeight;
+    float _heightHoldElapsed;
+    [SerializeField] PitchTracker pitchTracker;
+
+    // Live values while Enter is held, read directly by both machines' UI to draw the
+    // real-time pitch-difference meter. 
+    public NetworkVariable<float> livePitch = new NetworkVariable<float>(
+        0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<bool> isRecordingHeight = new NetworkVariable<bool>(
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+    [Header("Step 1 Recording Bar")]
+    [Tooltip("Prefab with a world-space Canvas + Slider inside.")]
     [SerializeField] GameObject recordingBarPrefab;
     [SerializeField] float maxRecordingTime = 10f;
     [SerializeField] Vector3 recordingBarOffset = new Vector3(0f, 1.8f, 0f);
@@ -27,43 +48,38 @@ public class PlayerAManager : MonoBehaviour
     float _recordingElapsed;
     GameObject _recordingBarInstance;
     Slider _recordingSlider;
-    Image _fallbackFill;
 
-    bool _isCloseToBin;
-    bool _isCloseToBelt;
+    // bool _isCloseToBin;
+    // bool _isCloseToBelt;
     bool _voiceSessionActive;
-    [SerializeField] private Vector3 toyOffset;
-    GameObject _currentToy;
+    // [SerializeField] private Vector3 toyOffset;
+    // GameObject _currentToy;
 
-    CharacterController _cc;
-    float _verticalVelocity;
-    Quaternion _baseRotation;
+    // priate NetworkVariable<bool> _isRecording = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-    void Awake(){
+    public override void OnNetworkSpawn(){
         _cc = GetComponent<CharacterController>();
         _baseRotation = transform.rotation;
+        pitchTracker = FindFirstObjectByType<PitchTracker>();
 
-        if (voiceInputManager != null)
+        if (VoskRecognitionManager.Instance != null)
         {
-            voiceInputManager.OnRecordingStarted += OnRecordingStarted;
-            voiceInputManager.OnTranscribed += OnVoiceTranscribed;
+            VoskRecognitionManager.Instance.OnTranscribed += OnVoiceRecognized;
         }
-
-        voiceInputManager.DisableVoiceInput();
-
-        currentState = PlayerState.Waiting;
-    } 
+        // currentState = PlayerState.Waiting;
+        launchManager = FindFirstObjectByType<LaunchManager>();
+    }
 
     void OnDestroy(){
-        if (voiceInputManager != null)
+        if (VoskRecognitionManager.Instance != null)
         {
-            voiceInputManager.OnRecordingStarted -= OnRecordingStarted;
-            voiceInputManager.OnTranscribed -= OnVoiceTranscribed;
+            VoskRecognitionManager.Instance.OnTranscribed -= OnVoiceRecognized;
         }
     }
 
-    // Take care of voice input + progress bar
-    void OnRecordingStarted(){
+    // Take care of voice input progress bar
+    void BeginListening(){
+        VoskRecognitionManager.Instance.BeginListening();
         _voiceSessionActive = true;
         _recordingElapsed = 0f;
         SpawnRecordingBar();
@@ -73,62 +89,20 @@ public class PlayerAManager : MonoBehaviour
     {
         if (_recordingBarInstance != null) Destroy(_recordingBarInstance);
         _recordingSlider = null;
-        _fallbackFill = null;
 
-        if (recordingBarPrefab != null)
+        if (recordingBarPrefab == null) return;
+
+        _recordingBarInstance = Instantiate(recordingBarPrefab);
+        _recordingSlider = _recordingBarInstance.GetComponentInChildren<Slider>(true);
+        if (_recordingSlider == null)
         {
-            _recordingBarInstance = Instantiate(recordingBarPrefab);
-            _recordingSlider = _recordingBarInstance.GetComponentInChildren<Slider>(true);
-            if (_recordingSlider != null)
-            {
-                _recordingSlider.minValue = 0f;
-                _recordingSlider.maxValue = 1f;
-                _recordingSlider.value = 0f;
-                _recordingSlider.interactable = false;
-            }
+            Debug.LogError("[PlayerAManager] RecordingBarPrefab has no Slider component in children.");
+            return;
         }
-        else
-        {
-            _recordingBarInstance = BuildFallbackBar();
-        }
-    }
-
-    GameObject BuildFallbackBar()
-    {
-        var canvasGO = new GameObject("RecordingBarCanvas");
-        var canvas = canvasGO.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvasGO.AddComponent<CanvasScaler>();
-        canvasGO.GetComponent<RectTransform>().sizeDelta = new Vector2(1f, 0.1f);
-
-        var bg = new GameObject("BG");
-        bg.transform.SetParent(canvasGO.transform, false);
-        var bgImg = bg.AddComponent<Image>();
-        bgImg.color = new Color(0.15f, 0.15f, 0.15f);
-        StretchRect(bg.GetComponent<RectTransform>());
-
-        var fill = new GameObject("Fill");
-        fill.transform.SetParent(canvasGO.transform, false);
-        _fallbackFill = fill.AddComponent<Image>();
-        _fallbackFill.color = Color.yellow;
-        _fallbackFill.type = Image.Type.Filled;
-        _fallbackFill.fillMethod = Image.FillMethod.Horizontal;
-        _fallbackFill.fillAmount = 0f;
-        var fillRt = fill.GetComponent<RectTransform>();
-        fillRt.anchorMin = Vector2.zero;
-        fillRt.anchorMax = Vector2.one;
-        fillRt.offsetMin = Vector2.zero;
-        fillRt.offsetMax = Vector2.zero;
-
-        return canvasGO;
-    }
-
-    static void StretchRect(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        _recordingSlider.minValue = 0f;
+        _recordingSlider.maxValue = 1f;
+        _recordingSlider.value = 0f;
+        _recordingSlider.interactable = false;
     }
 
     void UpdateRecordingBar()
@@ -143,46 +117,38 @@ public class PlayerAManager : MonoBehaviour
             _recordingBarInstance.transform.Rotate(0f, 180f, 0f);
         }
 
-        if (voiceInputManager != null && voiceInputManager.IsRecording)
+        if (VoskRecognitionManager.Instance != null && _voiceSessionActive)
         {
+            // Debug.Log($"[PlayerAManager] Recording... {_recordingElapsed:F1}s");
             _recordingElapsed += Time.deltaTime;
             float t = Mathf.Clamp01(_recordingElapsed / maxRecordingTime);
             if (_recordingSlider != null) _recordingSlider.value = t;
-            else if (_fallbackFill != null) _fallbackFill.fillAmount = t;
         }
         else if (_recordingElapsed > 0f)
         {
             Destroy(_recordingBarInstance);
             _recordingBarInstance = null;
             _recordingSlider = null;
-            _fallbackFill = null;
         }
     }
 
-
-    void OnVoiceTranscribed(string text){
+    void EndListening(){
+        VoskRecognitionManager.Instance.EndListeningAndRecognize();
         _voiceSessionActive = false;
-        _isCloseToBin = false;
+    }
 
-        GameObject matchedPrefab = toyCatalog?.CheckVoiceInput(text);
-        if (matchedPrefab == null)
+    void OnVoiceRecognized(string text){
+        ToyScriptableObject matchedToy = ToyCatalog.Instance?.CheckVoiceInput(text);
+        if (matchedToy == null)
         {
             Debug.Log($"[PlayerAManager] No toy type matched transcription: \"{text}\"");
             return;
         }
-
-        int cost = matchedPrefab.GetComponent<Toy>()?.Price ?? 0;
-        if (GameManager.Instance != null && !GameManager.Instance.SpendMoney(cost))
-        {
-            Debug.Log($"[PlayerAManager] Cannot afford toy (costs {cost}). Pickup blocked.");
-            return;
-        }
-
-        toySpawner.toyPrefab = matchedPrefab;
-        _currentToy = toySpawner.SpawnToyAt(toyOffset, transform);
-        currentState = PlayerState.Holding;
+        Debug.Log($"[PlayerAManager] Matched toy type: {matchedToy.TypeName}"); 
+        launchManager.RequestLoadToyRpc(matchedToy.TypeName);
     }
 
+    // Moving logic
     bool IsWalkableA(Vector3 position)
     {
         // Raycast downward from slightly above the target position
@@ -198,9 +164,12 @@ public class PlayerAManager : MonoBehaviour
 
     void Update()
     {
+        // Only process input for the local player 
+        if (PlayerSessionData.Instance.playerASlotOwner.Value != NetworkManager.Singleton.LocalClientId) return;
         var kb = Keyboard.current;
         if (kb == null) return;
 
+        // Moving logic
         float inputX = (kb.dKey.isPressed ? 1 : 0) - (kb.aKey.isPressed ? 1 : 0);
         float inputZ = (kb.wKey.isPressed ? 1 : 0) - (kb.sKey.isPressed ? 1 : 0);
 
@@ -224,33 +193,41 @@ public class PlayerAManager : MonoBehaviour
         if (horizontalMove.sqrMagnitude > 0.001f)
             transform.rotation = Quaternion.LookRotation(horizontalMove.normalized) * _baseRotation;
 
-        // Picking Up Object Logic
-        if (currentState == PlayerState.Waiting && !_voiceSessionActive){
-            _isCloseToBin = toySpawner.CheckDistance(transform.position);
+        // Vosk logic (temp)
+        if (kb.spaceKey.wasPressedThisFrame && !_voiceSessionActive)
+            BeginListening();
+        if (kb.spaceKey.wasReleasedThisFrame && _voiceSessionActive)
+            EndListening();
 
-            if (_isCloseToBin){
-                // Debug.Log("Player A is close to the toy bin. Press R to record voice input.");
-                voiceInputManager.EnableVoiceInput();
-            } else {
-                // Debug.Log("Player A is not close to the toy bin.");
-                voiceInputManager.DisableVoiceInput();
-            }
-        // Dropping Object Logic
-        }else if (currentState == PlayerState.Holding){
-            _isCloseToBelt = toyBelt.CheckDistance(transform.position);
+        HandleHeightRecording(kb);
+    }
 
-             if (_isCloseToBelt){
-                // Debug.Log("Player A is close to the toy belt. Press Space to place toy.");
-                if (kb.spaceKey.wasPressedThisFrame)
-                {
-                    toyBelt.PlaceToy(_currentToy);
-                    _currentToy = null;
-                    currentState = PlayerState.Waiting;
-                }
-            } else {
-                // Debug.Log("Player A is not close to the toy belt.");
-            }
-            // Trigger toy placement in ToyBelt
+    // Hold Enter to contribute to the joint throw-height decision with B.
+    // Updates livePitch every frame while held so both screens can show a real-time diff meter.
+    void HandleHeightRecording(Keyboard kb)
+    {
+        if (kb.enterKey.wasPressedThisFrame)
+        {
+            _isRecordingHeight = true;
+            isRecordingHeight.Value = true;
+            pitchTracker.StartTracking();
+        }
+
+        if (_isRecordingHeight && kb.enterKey.isPressed)
+        {
+            // Pitch == 0 means no clear pitch this frame (e.g. a breath) — hold the
+            // last value instead of snapping livePitch to 0.
+            float hz = pitchTracker.Pitch;
+            if (hz > 0f)
+                livePitch.Value = hz;
+        }
+
+        if (_isRecordingHeight && kb.enterKey.wasReleasedThisFrame)
+        {
+            _isRecordingHeight = false;
+            isRecordingHeight.Value = false;
+            pitchTracker.StopTracking();
+            // livePitch.Value stays at its last held value — LaunchManager reads it directly whenever it needs the settled result
         }
     }
 }

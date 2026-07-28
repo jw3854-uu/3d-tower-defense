@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e68346309d17c04ab26aabf9b3faf6d, type: 3}
+  m_Name: Toy 1
+  m_EditorClassIdentifier: Assembly-CSharp::ToyScriptableObject
+  typeName: 
+  maxHealth: 0
+  prefab:
+    prefab: {fileID: 8936766727913691151, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
+  spawnTriggerWords:
+  - Bee-Bee-BONK! Ba-Ba-BONK! Bo-Bo-BONK!
+  shootingTriggerWords:
+  - kikakikakika
+  cost: 20
+  attackRange: 20
+  attackRate: 1
+  attackDamage: 10
+  speed: 1.5
