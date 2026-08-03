@@ -5790,7 +5790,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToyCatalog
   entries:
-  - data: {fileID: 0}
+  - data: {fileID: 11400000, guid: 50dce560dfbf945b7a4f165aefddf21d, type: 2}
 --- !u!4 &330938928
 Transform:
   m_ObjectHideFlags: 0
@@ -15332,7 +15332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &780222990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29381,7 +29381,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1431625644
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40668,25 +40668,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 457a6968315ec413fa2abc9a54fce4c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
-  normalPrefab: {fileID: 6186660988083855759, guid: 6ad80e665ed71f9488abf7e0695766aa, type: 3}
-  fastPrefab: {fileID: 350190206390868207, guid: 02706f4bb1ac8cd43bcdb8238eba4de4, type: 3}
-  armorPrefab: {fileID: 1741207621142519305, guid: 3578bfd450546054084f3b344ec2a2a3, type: 3}
   waves:
   - spawnInterval: 2
     postWaveDelay: 30
-    normalCount: 5
-    fastCount: 0
-    armorCount: 0
-  - spawnInterval: 2
-    postWaveDelay: 30
-    normalCount: 7
-    fastCount: 3
-    armorCount: 0
-  - spawnInterval: 2
-    postWaveDelay: 30
-    normalCount: 5
-    fastCount: 3
-    armorCount: 2
+    enemyCounts:
+    - enemyType: {fileID: 11400000, guid: cd79a37d817154f529505d5d7b435f5e, type: 2}
+      count: 5
 --- !u!4 &2028677585
 Transform:
   m_ObjectHideFlags: 0
@@ -41008,7 +40995,7 @@ GameObject:
   - component: {fileID: 2046923866}
   - component: {fileID: 2046923865}
   m_Layer: 0
-  m_Name: Enemy Path
+  m_Name: Enemy Path Controller
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43520,6 +43507,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 893884096}
     m_Modifications:
+    - target: {fileID: 823515271086017108, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3082933644
+      objectReference: {fileID: 0}
+    - target: {fileID: 823515271086017108, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 823515271086017108, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 761895926
+      objectReference: {fileID: 0}
     - target: {fileID: 8596832180282524341, guid: 7c0c78bc00d480941966b50c0728c398, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

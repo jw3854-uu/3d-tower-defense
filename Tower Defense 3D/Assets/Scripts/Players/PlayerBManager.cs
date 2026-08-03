@@ -18,11 +18,10 @@ public class PlayerBManager : NetworkBehaviour
     public NetworkVariable<float> aimYaw = new NetworkVariable<float>(
         0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-    [Header("Height Contribution (joint with A)")]
-    [Tooltip("Placeholder for real pitch tracking — currently just measures how long Enter was held.")]
-    [SerializeField] float maxHoldTime = 3f;
+    [Header("Launcher Angle Contribution (joint with A)")]
     bool _isRecordingHeight;
     float _heightHoldElapsed;
+    [SerializeField] PitchTracker pitchTracker;
 
     // Live values while Enter is held, read directly by both machines' UI to draw the
     // real-time pitch-difference meter.
@@ -31,9 +30,10 @@ public class PlayerBManager : NetworkBehaviour
     public NetworkVariable<bool> isRecordingHeight = new NetworkVariable<bool>(
         false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-    void Awake()
+    public override void OnNetworkSpawn()
     {
         launchManager = FindFirstObjectByType<LaunchManager>();
+        pitchTracker = GetComponent<PitchTracker>();
     }
 
     void Update()
@@ -66,17 +66,24 @@ public class PlayerBManager : NetworkBehaviour
         {
             _isRecordingHeight = true;
             isRecordingHeight.Value = true;
+            pitchTracker.StartTracking();
         }
 
         if (_isRecordingHeight && kb.enterKey.isPressed)
         {
-            livePitch.Value = placeholderPitch; // TODO: replace with real pitch data once we have it
+            // Pitch == 0 means no clear pitch this frame (e.g. a breath) — hold the
+            // last value instead of snapping livePitch to 0.
+            // float hz = pitchTracker.Pitch;
+            // if (hz > 0f)
+            //     livePitch.Value = hz;
+            livePitch.Value = placeholderPitch; // TO SEE HOW A PERFORMS
         }
 
         if (_isRecordingHeight && kb.enterKey.wasReleasedThisFrame)
         {
             _isRecordingHeight = false;
             isRecordingHeight.Value = false;
+            pitchTracker.StopTracking();
             // livePitch.Value stays at its last held value — LaunchManager reads it directly whenever it needs the settled result
         }
     }

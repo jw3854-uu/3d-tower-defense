@@ -11,6 +11,7 @@ public class EnemyPath : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        grid = FindFirstObjectByType<Grid>();
         BuildPath();
     }
 

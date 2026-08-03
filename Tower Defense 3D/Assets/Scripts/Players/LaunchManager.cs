@@ -66,10 +66,10 @@ public class LaunchManager : NetworkBehaviour
             return;
         }
 
-        _loadedToyPrefab = toyData.Prefab.prefab;
+        _loadedToyPrefab = toyData.TowerPrefab.prefab;
         Debug.Log($"[LaunchManager] Loaded {typeName}, ready to launch.");
         toyInstance = Instantiate(_loadedToyPrefab, transform.position, transform.rotation);
-        toyInstance.GetComponent<NetworkObject>().Spawn();
+        toyInstance.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
     }
 
     // Called by PlayerBManager when B presses Space to throw.

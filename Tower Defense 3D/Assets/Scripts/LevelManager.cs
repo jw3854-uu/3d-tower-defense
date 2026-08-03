@@ -34,16 +34,32 @@ public class LevelManager : NetworkBehaviour
     public TextMeshProUGUI moneyUI;
 
     [Header("Game Over UI")]
+    [Tooltip("游戏结束时允许：重新开始游戏、回到主页面（可改为结算界面）")]
     public GameObject gameOverPanel;
     public Button startOverButton;
-    public Button closeButton;
+
+    [Header("暂停 UI")]
+    [Tooltip("暂停时允许：继续游戏、退出游戏、重新开始游戏")]
+    public Button pauseButton;
+    public GameObject pausePanel;
+    public Button resumeButton;
+    public Button quitButton;
+
+    NetworkVariable<bool> _isPaused = new NetworkVariable<bool>(
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     void Awake()
     {
         Instance = this;
+        Time.timeScale = 1f;
+
         gameOverPanel.SetActive(false);
-        startOverButton.onClick.AddListener(OnStartOver);
-        closeButton.onClick.AddListener(OnClose);
+        startOverButton.onClick.AddListener(() => OnStartOverRpc());
+
+        pausePanel.SetActive(false);
+        pauseButton.onClick.AddListener(() => OnPauseClickedRpc());
+        quitButton.onClick.AddListener(() => BackToLevelMenuRpc());
+        resumeButton.onClick.AddListener(() => OnResumeClickedRpc());
     }
 
     public override void OnNetworkSpawn()
@@ -64,6 +80,14 @@ public class LevelManager : NetworkBehaviour
         healthUI.text = $"Health: {_playerHealth.Value}";
         moneyUI.text = $"Money: {_playerMoney.Value}";
 
+        // Every machine sets its own Time.timeScale/panel in response — pausing is a
+        // per-engine-instance effect, so it has to be applied locally on both sides.
+        _isPaused.OnValueChanged += (oldVal, newVal) =>
+        {
+            Time.timeScale = newVal ? 0f : 1f;
+            pausePanel.SetActive(newVal);
+        };
+
         if (!IsServer) return;
 
         _playerHealth.Value = startingHealth;
@@ -71,6 +95,9 @@ public class LevelManager : NetworkBehaviour
 
         // Wait until the load event is fully finished for everyone before spawning anything.
         NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted;
+        // TESTING
+        // SpawnPlayers();
+        // enemyManager.BeginWaves();
     }
 
     void OnLoadEventCompleted(string sceneName, LoadSceneMode loadSceneMode, System.Collections.Generic.List<ulong> clientsCompleted, System.Collections.Generic.List<ulong> clientsTimedOut)
@@ -84,11 +111,11 @@ public class LevelManager : NetworkBehaviour
     void SpawnPlayers()
     {
         var a = Instantiate(PlayerAPrefab, spawnPointA.position, spawnPointA.rotation);
-        a.GetComponent<NetworkObject>().SpawnWithOwnership(PlayerSessionData.Instance.playerASlotOwner.Value);
+        a.GetComponent<NetworkObject>().SpawnWithOwnership(PlayerSessionData.Instance.playerASlotOwner.Value, destroyWithScene: true);
         var b = Instantiate(PlayerBPrefab, spawnPointB.position, spawnPointB.rotation);
-        b.GetComponent<NetworkObject>().SpawnWithOwnership(PlayerSessionData.Instance.playerBSlotOwner.Value);
+        b.GetComponent<NetworkObject>().SpawnWithOwnership(PlayerSessionData.Instance.playerBSlotOwner.Value, destroyWithScene: true);
         var launcher = Instantiate(launcherPrefab, launcherSpawnPoint.position, launcherSpawnPoint.rotation);
-        launcher.GetComponent<NetworkObject>().Spawn();
+        launcher.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
     }
 
     public void EnemyReachedEnd()
@@ -96,16 +123,28 @@ public class LevelManager : NetworkBehaviour
         _playerHealth.Value--;
     }
 
-    void OnStartOver()
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void OnStartOverRpc(RpcParams rpcParams = default)
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        NetworkManager.Singleton.SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
     }
 
-    void OnClose()
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void OnPauseClickedRpc(RpcParams rpcParams = default)
     {
-        gameOverPanel.SetActive(false);
-        // timeScale stays 0 — game remains frozen in lose state
+        _isPaused.Value = true;
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void BackToLevelMenuRpc(RpcParams rpcParams = default)
+    {
+        NetworkManager.Singleton.SceneManager.LoadScene("Level Menu", UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void OnResumeClickedRpc(RpcParams rpcParams = default)
+    {
+        _isPaused.Value = false;
     }
 
     // Returns false if the player cannot afford it. Server-only — writes to _playerMoney

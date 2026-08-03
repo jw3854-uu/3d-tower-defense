@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e68346309d17c04ab26aabf9b3faf6d, type: 3}
+  m_Name: Enemy 1
+  m_EditorClassIdentifier: Assembly-CSharp::ToyScriptableObject
+  typeName: enemy 1
+  maxHealth: 100
+  towerPrefab:
+    prefab: {fileID: 0}
+  spawnTriggerWords: []
+  shootingTriggerWords: []
+  cost: 0
+  attackRange: 0
+  attackRate: 0
+  attackDamage: 0
+  enemyPrefab: {fileID: 6186660988083855759, guid: 6ad80e665ed71f9488abf7e0695766aa, type: 3}
+  speed: 0.5
+  killReward: 10
+  armor: 0

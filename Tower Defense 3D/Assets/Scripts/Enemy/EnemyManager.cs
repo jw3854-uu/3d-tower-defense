@@ -4,6 +4,13 @@ using UnityEngine;
 using Unity.Netcode;
 
 [System.Serializable]
+public struct WaveEnemyCount
+{
+    public ToyScriptableObject enemyType;
+    public int count;
+}
+
+[System.Serializable]
 public struct WaveDefinition
 {
     [Tooltip("Seconds between each enemy spawn")]
@@ -12,23 +19,12 @@ public struct WaveDefinition
     [Tooltip("Seconds to wait after this wave finishes before starting the next")]
     public float postWaveDelay;
 
-    [Tooltip("How many Normal enemies to spawn")]
-    public int normalCount;
-
-    [Tooltip("How many Fast enemies to spawn")]
-    public int fastCount;
-
-    [Tooltip("How many Armor (High HP) enemies to spawn")]
-    public int armorCount;
+    [Tooltip("Which enemy types spawn this wave, and how many of each")]
+    public WaveEnemyCount[] enemyCounts;
 }
 
 public class EnemyManager : MonoBehaviour
 {
-    [Header("Enemy Prefabs")]
-    [SerializeField] GameObject normalPrefab;
-    [SerializeField] GameObject fastPrefab;
-    [SerializeField] GameObject armorPrefab;
-
     [Header("Waves")]
     [SerializeField] WaveDefinition[] waves;
 
@@ -60,9 +56,15 @@ public class EnemyManager : MonoBehaviour
         }
 
         var pool = new List<GameObject>();
-        for (int i = 0; i < wave.normalCount; i++) pool.Add(normalPrefab);
-        for (int i = 0; i < wave.fastCount;   i++) pool.Add(fastPrefab);
-        for (int i = 0; i < wave.armorCount;  i++) pool.Add(armorPrefab);
+        if (wave.enemyCounts != null)
+        {
+            foreach (var entry in wave.enemyCounts)
+            {
+                if (entry.enemyType == null || entry.enemyType.EnemyPrefab == null) continue;
+                for (int i = 0; i < entry.count; i++)
+                    pool.Add(entry.enemyType.EnemyPrefab);
+            }
+        }
 
         // Fisher-Yates shuffle so types are interspersed
         for (int i = pool.Count - 1; i > 0; i--)
@@ -73,11 +75,8 @@ public class EnemyManager : MonoBehaviour
 
         foreach (var prefab in pool)
         {
-            if (prefab != null)
-            {
-                var enemy = Instantiate(prefab, EnemyPath.Instance.Waypoints[0], prefab.transform.rotation);
-                enemy.GetComponent<NetworkObject>().Spawn();
-            }
+            var enemy = Instantiate(prefab, EnemyPath.Instance.Waypoints[0], prefab.transform.rotation);
+            enemy.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
             yield return new WaitForSeconds(wave.spawnInterval);
         }
     }

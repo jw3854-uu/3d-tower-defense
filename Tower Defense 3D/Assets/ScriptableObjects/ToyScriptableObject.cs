@@ -13,9 +13,10 @@ public class ToyScriptableObject : ScriptableObject
     [Header("Toy Types")]
     [SerializeField] string typeName;
     [SerializeField] int maxHealth;
-    [SerializeField] ToyPrefab prefab;
 
     [Header("As Tower")]
+    [Tooltip("Spawned by LaunchManager when A summons this type and B throws it — carries Toy + ToyManager.")]
+    [SerializeField] ToyPrefab towerPrefab;
     [SerializeField] string[] spawnTriggerWords;
     [SerializeField] string[] shootingTriggerWords;
     [SerializeField] int cost;
@@ -24,12 +25,17 @@ public class ToyScriptableObject : ScriptableObject
     [SerializeField] int attackDamage;
 
     [Header("As Enemy")]
-    // [SerializeField] int damage;
+    [Tooltip("Spawned by EnemyManager for waves — carries Enemy.")]
+    [SerializeField] GameObject enemyPrefab;
     [SerializeField] float speed;
+    [SerializeField] int killReward;
+    [Range(0f, 1f)]
+    [SerializeField] float armor; // fraction: 0 = no reduction, 0.5 = 50%
 
     public string TypeName => typeName;
     public int MaxHealth => maxHealth;
-    public ToyPrefab Prefab => prefab;
+    public ToyPrefab TowerPrefab => towerPrefab;
+    public GameObject EnemyPrefab => enemyPrefab;
 
     public IReadOnlyList<string> SpawnTriggerWords => spawnTriggerWords;
     public IReadOnlyList<string> ShootingTriggerWords => shootingTriggerWords;
@@ -38,6 +44,7 @@ public class ToyScriptableObject : ScriptableObject
     public float AttackRate => attackRate;
     public int AttackDamage => attackDamage;
 
-    // public int Damage => damage;
     public float Speed => speed;
+    public int KillReward => killReward;
+    public float Armor => armor;
 }

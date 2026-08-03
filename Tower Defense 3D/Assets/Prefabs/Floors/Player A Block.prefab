@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8207025951700480934}
   - component: {fileID: 6340847498304520712}
   m_Layer: 6
-  m_Name: Plane A Block
+  m_Name: Player A Block
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6863a183eccab493394fc1902cb43b7e, type: 2}
+  - {fileID: 2100000, guid: 4679d0429e9fc4be2abf438029da0a7c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -129,3 +129,6 @@ MonoBehaviour:
   isWalkableB: 0
   isBuildable: 0
   isEnemyPath: 0
+  isPathStart: 0
+  isPathEnd: 0
+  isOccupied: 0

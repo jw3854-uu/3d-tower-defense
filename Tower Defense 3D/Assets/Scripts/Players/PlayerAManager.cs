@@ -60,7 +60,7 @@ public class PlayerAManager : NetworkBehaviour
     public override void OnNetworkSpawn(){
         _cc = GetComponent<CharacterController>();
         _baseRotation = transform.rotation;
-        pitchTracker = FindFirstObjectByType<PitchTracker>();
+        pitchTracker = GetComponent<PitchTracker>();
 
         if (VoskRecognitionManager.Instance != null)
         {
@@ -169,6 +169,12 @@ public class PlayerAManager : NetworkBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
+        // Cap deltaTime for movement/physics math — the very first frame after a scene load
+        // (or any mid-game hitch) can report a huge Time.deltaTime, which would otherwise
+        // turn one frame of gravity into a giant instantaneous drop and shove the
+        // CharacterController sideways when it slams into the floor/collides on landing.
+        float dt = Mathf.Min(Time.deltaTime, 0.05f);
+
         // Moving logic
         float inputX = (kb.dKey.isPressed ? 1 : 0) - (kb.aKey.isPressed ? 1 : 0);
         float inputZ = (kb.wKey.isPressed ? 1 : 0) - (kb.sKey.isPressed ? 1 : 0);
@@ -177,17 +183,17 @@ public class PlayerAManager : NetworkBehaviour
         Vector3 camRight   = Vector3.ProjectOnPlane(Camera.main.transform.right,   Vector3.up).normalized;
         Vector3 horizontalMove = (camForward * inputZ + camRight * inputX) * moveSpeed;
 
-        if (_voiceSessionActive || !IsWalkableA(transform.position + horizontalMove * Time.deltaTime))
+        if (_voiceSessionActive || !IsWalkableA(transform.position + horizontalMove * dt))
             horizontalMove = Vector3.zero;
 
         if (_cc.isGrounded)
             _verticalVelocity = -1f;
         else
-            _verticalVelocity += gravity * Time.deltaTime;
+            _verticalVelocity += gravity * dt;
 
         Vector3 move = horizontalMove;
         move.y = _verticalVelocity;
-        _cc.Move(move * Time.deltaTime);
+        _cc.Move(move * dt);
         UpdateRecordingBar();
 
         if (horizontalMove.sqrMagnitude > 0.001f)

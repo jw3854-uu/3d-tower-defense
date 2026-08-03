@@ -6,12 +6,9 @@ using Unity.Netcode;
 public class Enemy : NetworkBehaviour
 {
     [Header("Stats")]
-    [SerializeField] float maxHp = 50f;
+    [Tooltip("Shared with this creature's tower form — maxHp/speed/killReward/armor all come from here.")]
+    [SerializeField] ToyScriptableObject enemyData;
     [SerializeField] float enemyOffset = 0f;
-    [SerializeField] float speed = 0.5f;    // tiles per second
-    [Range(0f, 1f)]
-    [SerializeField] float armor = 0f;   // fraction: 0 = no reduction, 0.5 = 50%
-    [SerializeField] int killReward = 10;
 
     [Header("Health Bar")]
     [SerializeField] float barWidth = 1f;
@@ -34,6 +31,12 @@ public class Enemy : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        if (enemyData == null)
+        {
+            Debug.LogError($"[Enemy] {gameObject.name} has no enemyData assigned — drag its ToyScriptableObject onto the Enemy component.", this);
+            return;
+        }
+
         // Visual-only setup — every machine builds its own health bar UI.
         _cam = Camera.main;
         _baseRotation = transform.rotation;
@@ -43,7 +46,7 @@ public class Enemy : NetworkBehaviour
         if (!IsServer) return;
 
         // Authority-only: server owns HP and movement.
-        _currentHp.Value = maxHp;
+        _currentHp.Value = enemyData.MaxHealth;
         _waypoints = EnemyPath.Instance?.Waypoints;
         if (_waypoints == null || _waypoints.Count == 0)
         {
@@ -118,7 +121,7 @@ public class Enemy : NetworkBehaviour
         }
 
         Vector3 target = _waypoints[_index] + Vector3.up * enemyOffset;
-        transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, target, enemyData.Speed * Time.deltaTime);
 
         Vector3 dir = target - transform.position;
         if (dir.sqrMagnitude > 0.001f)
@@ -133,7 +136,7 @@ public class Enemy : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void TakeDamageRpc(float damage, bool ignoresArmor = false)
     {
-        float effective = ignoresArmor ? damage : damage * (1f - armor);
+        float effective = ignoresArmor ? damage : damage * (1f - enemyData.Armor);
         _currentHp.Value = Mathf.Max(0f, _currentHp.Value - Mathf.Max(0f, effective));
         if (_currentHp.Value <= 0f) Die();
     }
@@ -141,7 +144,7 @@ public class Enemy : NetworkBehaviour
     void RefreshBar()
     {
         if (_hpFill == null) return;
-        float ratio = _currentHp.Value / maxHp;
+        float ratio = _currentHp.Value / enemyData.MaxHealth;
         var rt = _hpFill.GetComponent<RectTransform>();
         rt.anchorMax = new Vector2(ratio, 1f);
         _hpFill.color = Color.Lerp(Color.red, Color.green, ratio);
@@ -150,7 +153,7 @@ public class Enemy : NetworkBehaviour
     // Server-only: award money then despawn, which removes the object on every client.
     void Die()
     {
-        LevelManager.Instance?.AddMoney(killReward);
+        LevelManager.Instance?.AddMoney(enemyData.KillReward);
         NetworkObject.Despawn();
     }
 

@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 4.440892e-16, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -1.71, y: 1.3, z: -9.57}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5570380692390313732}
@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 775816147
+  GlobalObjectIdHash: 3848339051
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -75,6 +75,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   playerA: {fileID: 0}
   playerB: {fileID: 0}
+  pitchMinHz: 100
+  pitchMaxHz: 400
   maxElevationDegrees: 60
   launchSpeed: 15
 --- !u!1001 &5388362097910552815

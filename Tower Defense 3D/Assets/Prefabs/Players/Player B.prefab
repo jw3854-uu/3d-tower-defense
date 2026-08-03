@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1738012671860487469}
   - component: {fileID: 5556695961432845930}
   - component: {fileID: 2860931846675017181}
+  - component: {fileID: -2909562318377947712}
   m_Layer: 0
   m_Name: Player B
   m_TagString: Untagged
@@ -46,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3760761342
+  GlobalObjectIdHash: 2684593366
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -127,7 +128,7 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
-  maxHoldTime: 3
+  pitchTracker: {fileID: 0}
   livePitch:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -138,3 +139,27 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+--- !u!114 &-2909562318377947712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2328223163159517096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66db1374826974146b558c179d937f3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PitchTracker
+  method: 1
+  minFreq: 80
+  maxFreq: 600
+  clarityThreshold: 0.2
+  clipLevel: 0.4
+  cepstrumFrameSize: 512
+  cepstrumPeakThreshold: 0.04
+  noiseLearnRMS: 0.008
+  enableDenoise: 1
+  windowSamples: 2048
+  intervalSec: 0.05
+  medianWindow: 5
